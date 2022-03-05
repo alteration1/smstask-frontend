@@ -26,15 +26,15 @@ const RegisterForm = (props) => {
             setPhone(userPhone)
         }
         values.phone = userPhone.code + userPhone.phone
+        setFormValue(values)
         //check is phone was already verified
         client
             .post('/api/check/phone', { phone: phone.code + phone.phone })
             .then(response => {
                 if (response.data && response.data.check) {
                     setVerified(true)
-                    registerUser()
+                    registerUser(values)
                 } else {
-                    setFormValue(values)
                     setOpen(true)
                     setLoading(true)
                     if (!code) {
@@ -105,8 +105,8 @@ const RegisterForm = (props) => {
     //send code for verification
     const verifyCode = (values) => {
         values.phone = phone.code + phone.phone
-        console.log(countAttempts)
         let countMessage = ''
+        //count verify attempts
         if (countAttempts === 2) {
             setAttempt(0)
             setDisabled(true)
@@ -136,13 +136,18 @@ const RegisterForm = (props) => {
                 }
                 message.error(errorMessage + countMessage, 5);
             })
-        // }        
     }
 
     //send user data for registration
-    const registerUser = () => {
+    const registerUser = (values = []) => {
+        let form;
+        if (values) {
+            form = values
+        } else {
+            form = formValue
+        }
         client
-            .post('/api/register/user', formValue)
+            .post('/api/register/user', form)
             .then(response => {
                 let messageSuccess = 'You are successfully registered.';
                 if (response.data && response.data.message) {
