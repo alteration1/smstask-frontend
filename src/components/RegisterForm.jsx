@@ -22,14 +22,33 @@ const RegisterForm = (props) => {
     const onFinish = (values) => {
         let userPhone = values.phone
         if (userPhone.phone.charAt(0) === '0') {
-            userPhone.phone = userPhone.phone.substring(1)            
+            userPhone.phone = userPhone.phone.substring(1)
             setPhone(userPhone)
         }
-        values.phone = userPhone.code+userPhone.phone
-        setFormValue(values)
-        setOpen(true)
-        setLoading(true)
-        sendCodeToPhone()
+        values.phone = userPhone.code + userPhone.phone
+        //check is phone was already verified
+        client
+            .post('/api/check/phone', { phone: phone.code + phone.phone })
+            .then(response => {
+                if (response.data && response.data.check) {
+                    setVerified(true)
+                    registerUser()
+                } else {
+                    setFormValue(values)
+                    setOpen(true)
+                    setLoading(true)
+                    if (!code) {
+                        sendCodeToPhone()
+                    }
+                }
+            })
+            .catch(error => {
+                let errorMessage = 'Some error occured!'
+                if (error.response && error.response.data && error.response.data.error) {
+                    errorMessage = error.response.data.error;
+                }
+                message.error(errorMessage, 5);
+            })
     }
 
     //on change phone field
@@ -61,6 +80,7 @@ const RegisterForm = (props) => {
                 .post('/api/send/code', { phone: phone.code + phone.phone })
                 .then(response => {
                     setSendDateTime(moment())
+                    setCode(true)
                     if (response.data && response.data.message) {
                         message.success(response.data.message, 5)
                     } else if (response.data && response.data.warning) {
@@ -83,7 +103,7 @@ const RegisterForm = (props) => {
     }
 
     //send code for verification
-    const verifyCode = (values) => {      
+    const verifyCode = (values) => {
         values.phone = phone.code + phone.phone
         console.log(countAttempts)
         let countMessage = ''
@@ -114,7 +134,7 @@ const RegisterForm = (props) => {
                 if (error.response && error.response.data && error.response.data.error) {
                     errorMessage = error.response.data.error;
                 }
-                message.error(errorMessage+countMessage , 5);
+                message.error(errorMessage + countMessage, 5);
             })
         // }        
     }
@@ -139,7 +159,7 @@ const RegisterForm = (props) => {
                 message.error(errorMessage, 5);
                 setLoading(false)
             })
-    }    
+    }
 
     return (<>
         <Row gutter={[24, 48]} className="register-form">
@@ -214,6 +234,11 @@ const RegisterForm = (props) => {
             onCancel={closeModal}
             width={1000}
         >
+            <Row gutter={[24, 48]}>
+                <Col span={24} >
+                    We have sent a verification code to your phone, please fill it in the field.
+                </Col>
+            </Row>
             <Row gutter={[24, 48]}>
                 <Col span={24} >
                     <Button
