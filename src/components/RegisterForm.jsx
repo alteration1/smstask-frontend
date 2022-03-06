@@ -1,14 +1,12 @@
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { message, Form, Input, Row, Col, Button, Modal } from 'antd'
 import CountryPhoneInput, { ConfigProvider } from 'antd-country-phone-input'
 import client from '../client'
 import moment from 'moment'
 import { ReloadOutlined } from '@ant-design/icons'
 import en from 'world_countries_lists/data/countries/en/world.json'
-import 'antd-country-phone-input/dist/index.css'
 
 const RegisterForm = (props) => {
-    const ref = useRef(null)
     const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false) //open verifivation modal
     const [verified, setVerified] = useState(false) //is phone verified
@@ -29,7 +27,7 @@ const RegisterForm = (props) => {
         setFormValue(values)
         //check is phone was already verified
         client
-            .post('/api/check/phone', { phone: phone.code + phone.phone })
+            .post('/api/check/phone', { phone: phone.code + phone.phone, email: values.email })
             .then(response => {
                 if (response.data && response.data.check) {
                     setVerified(true)
@@ -139,7 +137,7 @@ const RegisterForm = (props) => {
     }
 
     //send user data for registration
-    const registerUser = (values = []) => {
+    const registerUser = (values = null) => {
         let form;
         if (values) {
             form = values
@@ -153,7 +151,7 @@ const RegisterForm = (props) => {
                 if (response.data && response.data.message) {
                     messageSuccess = response.data.message;
                 }
-                message.success(messageSuccess, 5)
+                message.success(messageSuccess, 10)
                 setLoading(false)
             })
             .catch(error => {
@@ -176,7 +174,6 @@ const RegisterForm = (props) => {
             <Col span={12} offset={6}>
                 <ConfigProvider locale={en}>
                     <Form
-                        ref={ref}
                         name="register"
                         onFinish={onFinish}
                         layout="vertical">

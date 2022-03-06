@@ -1,6 +1,5 @@
 import { Layout } from 'antd';
 import RegisterForm from './components/RegisterForm'
-import 'antd/dist/antd.css';
 import './App.css';
 
 const { Header, Content } = Layout;
